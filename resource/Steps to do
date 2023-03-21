@@ -94,3 +94,10 @@ create pipeline:
     create pipeline - pipelinename - new-service-role - next - sourceprovider - amazon S3 - bucketname - objectkey(s3 filename) - skip build - awscodedeploy - appname - create pipeline
 
 ============================================================================================
+
+setup the access and secret key in github - ( settings - sercrets - actions )
+setup the workflow file in github - (actions - aws ecs - replace the content with aws.yml file - make sure secrets are set - check branch name proper)
+setup the appspec file in github        - (create a new file and setup the instructions)
+
+
+
