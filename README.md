@@ -1,2 +1,1 @@
-# cicd_deploy_aws
-github to ec2 - code deploy setup sample
+# aws_codedeploy_using_github
