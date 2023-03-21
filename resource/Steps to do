@@ -1,0 +1,96 @@
+Reference  Document
+
+
+Create EC2 Role:        AmazonEC2RoleforAWSCodeDeploy, AmazonS3FullAccess
+create role - ec2 - amazonec2roleforawscodedeploy - next tag - Name : EC2codedeploy - (rolename) EC2codedeploy - create 
+click on that role - attach policies - amazons3fullaccess - attach policy
+
+============================================================================================
+Create CodeDeploy Role:     AWSCodeDeployRole and trust relationships
+create role - codedeploy - permission - awscodedeployrole - Name:codedeployrole - (rolename) codedeployrole - create
+In Trust Relationships:
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": [
+                            "ec2.amazonaws.com",
+                            "codedeploy.amazonaws.com"
+                        ]
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+
+
+============================================================================================
+
+Create pipeline service Role:       (create new role in pipepline creation and then attach these policies) AmazonS3FullAccess, AWSCodeDeployRole
+
+============================================================================================
+Create User:
+
+create a im user with full permission on (AWSCodeDeployFullAccess)
+create access key and secret key in security credentials
+AKIAZIVJ2YBKB3TRNWIT
+QMMvtmbzFEsOHGOH8HLWg+Wc9ksRQWow4kGrXwSz
+
+============================================================================================
+User Data in instance:
+for 22.04 in case someone needs. Here it is,
+Installing Code deploy agent on ubuntu 22.04 EC2 Instance
+
+Source:- Github discussions
+!/bin/bash
+# This installs the CodeDeploy agent and its prerequisites on Ubuntu 22.04.
+
+sudo apt-get update
+sudo apt-get install ruby-full ruby-webrick wget -y
+cd /tmp
+wget https://aws-codedeploy-ap-south-1.s3.ap-south-1.amazonaws.com/releases/codedeploy-agent_1.3.2-1902_all.deb
+mkdir codedeploy-agent_1.3.2-1902_ubuntu22
+dpkg-deb -R codedeploy-agent_1.3.2-1902_all.deb codedeploy-agent_1.3.2-1902_ubuntu22
+sed 's/Depends:.*/Depends:ruby3.0/' -i ./codedeploy-agent_1.3.2-1902_ubuntu22/DEBIAN/control
+dpkg-deb -b codedeploy-agent_1.3.2-1902_ubuntu22/
+sudo dpkg -i codedeploy-agent_1.3.2-1902_ubuntu22.deb
+systemctl list-units --type=service | grep codedeploy
+sudo service codedeploy-agent status
+
+============================================================================================
+
+
+instance:
+new instance - amazon linux - select i am role - ec2codedeploy - 
+            userdata:
+                        #!/bin/bash
+                        sudo yum -y update
+                        sudo yum -y install ruby
+                        sudo yum -y install wget
+                        cd /home/ec2-user
+                        wget https://aws-codedeploy-ap-south-1.s3.ap-south-1.amazonaws.com/latest/install
+                        sudo chmod +x ./install
+                        sudo ./install auto
+                        sudo yum install -y python-pip
+                        sudo pip install awscli
+                        
+             tags:
+                    Name: EC2 instance demo
+                    
+            Security group:
+                    http , https    (codedeploy security group)
+                    
+    Launch
+    
+============================================================================================
+code deploy:
+    create application - application_name - EC2_on_premises - create application
+    create group - group_name - IAM=codedeployrole - inplace - amazonec2instance -  (Name: EC2 instance demo) - now and schedule updates - allatonce - create deployment
+
+============================================================================================
+create pipeline:
+    create pipeline - pipelinename - new-service-role - next - sourceprovider - amazon S3 - bucketname - objectkey(s3 filename) - skip build - awscodedeploy - appname - create pipeline
+
+============================================================================================
